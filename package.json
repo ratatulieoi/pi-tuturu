@@ -1,0 +1,13 @@
+{
+  "name": "pi-tuturu",
+  "version": "0.1.0",
+  "description": "Completion sound notifications for pi with selectable sound and volume.",
+  "type": "module",
+  "keywords": ["pi-package", "pi-extension", "notification", "sound"],
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}

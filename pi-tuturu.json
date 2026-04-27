@@ -1,0 +1,7 @@
+{
+  "sound": "tuturu",
+  "volume": 60,
+  "sounds": {
+    "tuturu": "sounds/tuturu.mp3"
+  }
+}
