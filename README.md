@@ -11,7 +11,6 @@ It includes one bundled sound: `tuturu`.
 - Select sound, volume, test sound, or show config path
 - Footer/dashboard status when enabled: `tuturu : 60%`
 - `random` mode for custom sound collections
-- No Pi runtime patching; survives Pi updates
 
 ## Install
 
@@ -19,12 +18,6 @@ From GitHub:
 
 ```bash
 pi install git:github.com/ratatulieoi/pi-tuturu
-```
-
-Or local path:
-
-```bash
-pi install /absolute/path/to/pi-tuturu
 ```
 
 Then restart Pi or run:
@@ -112,7 +105,3 @@ Check:
 ```bash
 command -v paplay
 ```
-
-## Notes
-
-This package intentionally does not inject entries into Pi's built-in `/settings`, because that requires patching Pi runtime files and can be overwritten by Pi updates.
