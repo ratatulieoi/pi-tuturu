@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { dirname, extname, join } from "node:path";
 import { platform } from "node:os";
+import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { SettingsList } from "@mariozechner/pi-tui";
 import type { SettingItem, SettingsListTheme } from "@mariozechner/pi-tui";
@@ -12,7 +13,7 @@ type TuturuConfig = {
 	sounds: Record<string, string>;
 };
 
-const PACKAGE_DIR = dirname(new URL(import.meta.url).pathname);
+const PACKAGE_DIR = dirname(fileURLToPath(import.meta.url));
 const CONFIG_FILE = join(PACKAGE_DIR, "pi-tuturu.json");
 const DEFAULT_CONFIG: TuturuConfig = {
 	sound: "tuturu",
@@ -101,6 +102,11 @@ function spawnDetached(command: string, args: string[]) {
 	child.unref();
 }
 
+function powershell(command: string) {
+	const encoded = Buffer.from(command, "utf16le").toString("base64");
+	spawnDetached("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encoded]);
+}
+
 function play(config: TuturuConfig) {
 	const file = resolveSound(config);
 	if (!file) return;
@@ -113,23 +119,12 @@ function play(config: TuturuConfig) {
 	}
 
 	if (os === "win32") {
+		const escapedFile = file.replace(/'/g, "''");
 		if (extname(file).toLowerCase() === ".wav") {
-			spawnDetached("powershell.exe", [
-				"-NoProfile",
-				"-WindowStyle",
-				"Hidden",
-				"-Command",
-				`$p = New-Object System.Media.SoundPlayer ${JSON.stringify(file)}; $p.PlaySync();`,
-			]);
+			powershell(`$p = [System.Media.SoundPlayer]::new('${escapedFile}'); $p.Load(); $p.PlaySync();`);
 			return;
 		}
-		spawnDetached("powershell.exe", [
-			"-NoProfile",
-			"-WindowStyle",
-			"Hidden",
-			"-Command",
-			`Add-Type -AssemblyName PresentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]${JSON.stringify(file)}); $p.Volume = ${Math.min(1.5, volume / 100)}; $p.Play(); Start-Sleep -Milliseconds 5000; $p.Close();`,
-		]);
+		powershell(`Add-Type -AssemblyName PresentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${escapedFile}'); $p.Volume = ${Math.min(1.5, volume / 100)}; $p.Play(); Start-Sleep -Milliseconds 5000; $p.Close();`);
 		return;
 	}
 
