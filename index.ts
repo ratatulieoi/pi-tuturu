@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
+import { platform } from "node:os";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { SettingsList } from "@mariozechner/pi-tui";
 import type { SettingItem, SettingsListTheme } from "@mariozechner/pi-tui";
@@ -17,7 +18,7 @@ const DEFAULT_CONFIG: TuturuConfig = {
 	sound: "tuturu",
 	volume: 100,
 	sounds: {
-		tuturu: join(PACKAGE_DIR, "sounds", "tuturu.mp3"),
+		tuturu: join(PACKAGE_DIR, "sounds", "tuturu.wav"),
 	},
 };
 const BASE_OPTIONS = ["tuturu", "random", "off"];
@@ -33,8 +34,12 @@ function settingsTheme(theme: ExtensionContext["ui"]["theme"]): SettingsListThem
 	};
 }
 
+function isAbsolutePath(soundPath: string): boolean {
+	return soundPath.startsWith("/") || /^[A-Za-z]:[\\/]/.test(soundPath) || soundPath.startsWith("\\\\");
+}
+
 function resolveSoundPath(soundPath: string): string {
-	return soundPath.startsWith("/") ? soundPath : join(PACKAGE_DIR, soundPath);
+	return isAbsolutePath(soundPath) ? soundPath : join(PACKAGE_DIR, soundPath);
 }
 
 function loadConfig(): TuturuConfig {
@@ -86,15 +91,50 @@ function resolveSound(config: TuturuConfig): string | undefined {
 	return file && existsSync(file) ? file : undefined;
 }
 
+function spawnDetached(command: string, args: string[]) {
+	const child = spawn(command, args, {
+		detached: true,
+		stdio: "ignore",
+		windowsHide: true,
+	});
+	child.on("error", () => undefined);
+	child.unref();
+}
+
 function play(config: TuturuConfig) {
 	const file = resolveSound(config);
 	if (!file) return;
-	const volume = Math.round(65536 * (normalizeVolume(config.volume) / 100));
-	const child = spawn("paplay", [`--volume=${volume}`, file], {
-		detached: true,
-		stdio: "ignore",
-	});
-	child.unref();
+	const volume = normalizeVolume(config.volume);
+	const os = platform();
+
+	if (os === "darwin") {
+		spawnDetached("osascript", ["-e", `set volume output volume ${Math.min(100, volume)}`, "-e", `do shell script "afplay " & quoted form of ${JSON.stringify(file)}`]);
+		return;
+	}
+
+	if (os === "win32") {
+		if (extname(file).toLowerCase() === ".wav") {
+			spawnDetached("powershell.exe", [
+				"-NoProfile",
+				"-WindowStyle",
+				"Hidden",
+				"-Command",
+				`$p = New-Object System.Media.SoundPlayer ${JSON.stringify(file)}; $p.PlaySync();`,
+			]);
+			return;
+		}
+		spawnDetached("powershell.exe", [
+			"-NoProfile",
+			"-WindowStyle",
+			"Hidden",
+			"-Command",
+			`Add-Type -AssemblyName PresentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]${JSON.stringify(file)}); $p.Volume = ${Math.min(1.5, volume / 100)}; $p.Play(); Start-Sleep -Milliseconds 5000; $p.Close();`,
+		]);
+		return;
+	}
+
+	const pulseVolume = Math.round(65536 * (volume / 100));
+	spawnDetached("paplay", [`--volume=${pulseVolume}`, file]);
 }
 
 function updateStatus(ctx: ExtensionContext) {

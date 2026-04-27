@@ -62,7 +62,7 @@ Default:
   "sound": "tuturu",
   "volume": 60,
   "sounds": {
-    "tuturu": "sounds/tuturu.mp3"
+    "tuturu": "sounds/tuturu.wav"
   }
 }
 ```
@@ -78,9 +78,9 @@ Example with files inside the package:
   "sound": "random",
   "volume": 70,
   "sounds": {
-    "tuturu": "sounds/tuturu.mp3",
-    "correct": "sounds/correct.mp3",
-    "done": "sounds/done.oga"
+    "tuturu": "sounds/tuturu.wav",
+    "correct": "sounds/correct.wav",
+    "done": "sounds/done.mp3"
   }
 }
 ```
@@ -92,7 +92,7 @@ Example with absolute paths:
   "sound": "correct",
   "volume": 70,
   "sounds": {
-    "tuturu": "sounds/tuturu.mp3",
+    "tuturu": "sounds/tuturu.wav",
     "correct": "/home/you/Music/correct.mp3"
   }
 }
@@ -102,9 +102,15 @@ If `sound` is `random`, Pi randomly picks from existing files in `sounds`.
 
 If `sound` is `off`, no dashboard status is shown and no sound plays.
 
-## Requirements
+## Platform support
 
-`paplay` must be available. On Arch/CachyOS it is usually provided by PulseAudio/PipeWire Pulse compatibility packages.
+- Linux: uses `paplay`
+- macOS: uses `afplay`
+- Windows: uses PowerShell audio playback
+
+The bundled sound is a `.wav` so it works on Windows without extra dependencies.
+
+On Linux, `paplay` must be available. On Arch/CachyOS it is usually provided by PulseAudio/PipeWire Pulse compatibility packages.
 
 Check:
 
