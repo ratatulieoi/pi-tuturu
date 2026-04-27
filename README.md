@@ -14,6 +14,12 @@ It includes one bundled sound: `tuturu`.
 
 ## Install
 
+From npm:
+
+```bash
+pi install npm:pi-tuturu
+```
+
 From GitHub:
 
 ```bash
