@@ -3,11 +3,40 @@
   "version": "0.1.0",
   "description": "Completion sound notifications for pi with selectable sound and volume.",
   "type": "module",
-  "keywords": ["pi-package", "pi-extension", "notification", "sound"],
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "notification",
+    "sound",
+    "tuturu"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ratatulieoi/pi-tuturu.git"
+  },
+  "homepage": "https://github.com/ratatulieoi/pi-tuturu#readme",
+  "bugs": {
+    "url": "https://github.com/ratatulieoi/pi-tuturu/issues"
+  },
+  "files": [
+    "index.ts",
+    "pi-tuturu.json",
+    "sounds",
+    "README.md"
+  ],
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": [
+      "./index.ts"
+    ]
   },
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*"
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*"
+  },
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "check": "node --check index.ts"
   }
 }
